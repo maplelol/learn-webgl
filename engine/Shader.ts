@@ -1,29 +1,50 @@
 
 export default class Shader {
-    private _shader: WebGLShader = undefined;
+    private _gl: WebGLRenderingContext = undefined;
+    private _glShader: WebGLShader = undefined;
 
-    public set glShader(s: WebGLShader) {
-        this._shader = s;
-    }
     public get glShader() {
-        return this._shader;
+        return this._glShader;
     }
 
-    public static createFromSource(gl: WebGLRenderingContext, type: GLenum, source: string): Shader {
-        let glShader = gl.createShader(type);
-        gl.shaderSource(glShader, source);
-        gl.compileShader(glShader);
+    constructor(gl: WebGLRenderingContext) {
+        this._gl = gl;
+    }
 
-        let success = gl.getShaderParameter(glShader, gl.COMPILE_STATUS);
-        if (success) {
-            let shader = new Shader();
-            shader.glShader = glShader;
+    public static createWithSource(gl: WebGLRenderingContext, type: GLenum, source: string) {
+        let shader = new Shader(gl);
+        if (shader.initWith(type, source).compile()) {
             return shader;
+        } else {
+            return undefined;
+        }
+    }
+
+    public compile() {
+        this._gl.compileShader(this._glShader);
+
+        let success = this._gl.getShaderParameter(this._glShader, this._gl.COMPILE_STATUS);
+        if (success) {
+            return this;
         }
 
-        console.warn(gl.getShaderInfoLog(glShader));
-        gl.deleteShader(glShader);
+        console.warn(this._gl.getShaderInfoLog(this._glShader));
+        this.delete();
 
         return undefined;
+    }
+
+    public delete() {
+        if (this._glShader) {
+            this._gl.deleteShader(this._glShader);
+            this._glShader = undefined;
+        }
+    }
+
+    private initWith(type: GLenum, source: string) {
+        this._glShader = this._gl.createShader(type);
+        this._gl.shaderSource(this._glShader, source);
+
+        return this;
     }
 }

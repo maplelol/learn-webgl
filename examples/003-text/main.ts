@@ -2,7 +2,7 @@
 import MainLoop from "../../engine/MainLoop"
 import Program from "../../engine/Program"
 
-class Example002_Texture {
+class Example003_Text {
     public loadImage(url: string): Promise<HTMLImageElement> {
         let image = new Image();
         image.crossOrigin = "anonymous";
@@ -16,7 +16,22 @@ class Example002_Texture {
 
     private _program: Program = undefined;
 
-    public render(image: HTMLImageElement) {
+    public createTextCanvas(ctx: CanvasRenderingContext2D, text: string, width: number, height: number) {
+        ctx.canvas.width = width;
+        ctx.canvas.height = height;
+        ctx.font = "20px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "white";
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 3;
+        ctx.strokeText(text, width / 2, height / 2);
+        ctx.fillText(text, width / 2, height / 2);
+        return ctx.canvas;
+    }
+
+    public render(textCanvas: HTMLCanvasElement) {
         let canvas: HTMLCanvasElement = document.querySelector("#canvas");
         let gl: WebGLRenderingContext = canvas.getContext("webgl");
 
@@ -43,6 +58,9 @@ class Example002_Texture {
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
         gl.clearColor(0.25, 0.25, 0.25, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -54,11 +72,11 @@ class Example002_Texture {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         let positions = [
             0, 0,
-            image.width / gl.canvas.width * 2, 0,
-            0, image.height / gl.canvas.height * 2,
-            0, image.height / gl.canvas.height * 2,
-            image.width / gl.canvas.width * 2, image.height / gl.canvas.height * 2,
-            image.width / gl.canvas.width * 2, 0,
+            textCanvas.width / gl.canvas.width * 2, 0,
+            0, textCanvas.height / gl.canvas.height * 2,
+            0, textCanvas.height / gl.canvas.height * 2,
+            textCanvas.width / gl.canvas.width * 2, textCanvas.height / gl.canvas.height * 2,
+            textCanvas.width / gl.canvas.width * 2, 0,
         ];
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
@@ -92,17 +110,13 @@ class Example002_Texture {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textCanvas);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 }
 
-let ex = new Example002_Texture();
-ex.loadImage("https://webglfundamentals.org/webgl/resources/leaves.jpg").then((image) => {
-    ex.render(image);
-});
+let textCtx: CanvasRenderingContext2D = document.createElement("canvas").getContext("2d");
+let ex = new Example003_Text();
+ex.render(ex.createTextCanvas(textCtx, "hello world", 200, 100));
 
-MainLoop.instance.init(60).start(() => {
-
-});
