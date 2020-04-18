@@ -1,4 +1,6 @@
 
+import Shader from "./Shader"
+
 export default class MainLoop {
     public static readonly instance: MainLoop = new MainLoop();
 
@@ -18,7 +20,10 @@ export default class MainLoop {
 
     private loop() {
         this._cb();
-        console.log(Date.now());
         requestAnimationFrame(this.loop.bind(this));
+    }
+
+    public static createShader(gl: WebGLRenderingContext, type: GLenum, source: string) {
+        return Shader.createFromSource(gl, type, source);
     }
 }

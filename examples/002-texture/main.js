@@ -1,3 +1,68 @@
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var Shader_1 = require("./Shader");
+var MainLoop = /** @class */ (function () {
+    function MainLoop() {
+        this._frameRate = 60;
+        this._cb = undefined;
+    }
+    MainLoop.prototype.init = function (frameRate) {
+        this._frameRate = frameRate;
+        return this;
+    };
+    MainLoop.prototype.start = function (cb) {
+        this._cb = cb;
+        this.loop();
+    };
+    MainLoop.prototype.loop = function () {
+        this._cb();
+        requestAnimationFrame(this.loop.bind(this));
+    };
+    MainLoop.createShader = function (gl, type, source) {
+        return Shader_1.default.createFromSource(gl, type, source);
+    };
+    MainLoop.instance = new MainLoop();
+    return MainLoop;
+}());
+exports.default = MainLoop;
+
+},{"./Shader":2}],2:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var Shader = /** @class */ (function () {
+    function Shader() {
+        this._shader = undefined;
+    }
+    Object.defineProperty(Shader.prototype, "glShader", {
+        get: function () {
+            return this._shader;
+        },
+        set: function (s) {
+            this._shader = s;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Shader.createFromSource = function (gl, type, source) {
+        var glShader = gl.createShader(type);
+        gl.shaderSource(glShader, source);
+        gl.compileShader(glShader);
+        var success = gl.getShaderParameter(glShader, gl.COMPILE_STATUS);
+        if (success) {
+            var shader = new Shader();
+            shader.glShader = glShader;
+            return shader;
+        }
+        console.warn(gl.getShaderInfoLog(glShader));
+        gl.deleteShader(glShader);
+        return undefined;
+    };
+    return Shader;
+}());
+exports.default = Shader;
+
+},{}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var MainLoop_1 = require("../../engine/MainLoop");
@@ -22,7 +87,7 @@ var Example002_Texture = /** @class */ (function () {
         var fsSource = "\n            precision mediump float;\n            varying vec2 v_texCoord;\n            uniform sampler2D u_tex;\n\n            void main() {\n                gl_FragColor = texture2D(u_tex,vec2(v_texCoord.x,1.0-v_texCoord.y));\n            }\n        ";
         var fragmentShader = this.createShaderFromSource(gl, gl.FRAGMENT_SHADER, fsSource);
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-        gl.clearColor(0.5, 0.5, 1.0, 1.0);
+        gl.clearColor(0.25, 0.25, 0.25, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
         var program = this.createProgram(gl, vertexShader, fragmentShader);
         var positionAttribLoc = gl.getAttribLocation(program, "a_position");
@@ -66,15 +131,10 @@ var Example002_Texture = /** @class */ (function () {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
     Example002_Texture.prototype.createShaderFromSource = function (gl, type, source) {
-        var shader = gl.createShader(type);
-        gl.shaderSource(shader, source);
-        gl.compileShader(shader);
-        var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-        if (success) {
-            return shader;
+        var shader = MainLoop_1.default.createShader(gl, type, source);
+        if (shader) {
+            return shader.glShader;
         }
-        console.warn(gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
         return undefined;
     };
     Example002_Texture.prototype.createProgram = function (gl, vs, fs) {
@@ -98,3 +158,5 @@ ex.loadImage("https://webglfundamentals.org/webgl/resources/leaves.jpg").then(fu
 });
 MainLoop_1.default.instance.init(60).start(function () {
 });
+
+},{"../../engine/MainLoop":1}]},{},[3]);

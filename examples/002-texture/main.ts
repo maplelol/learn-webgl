@@ -42,7 +42,7 @@ class Example002_Texture {
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        gl.clearColor(0.5, 0.5, 1.0, 1.0);
+        gl.clearColor(0.25, 0.25, 0.25, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         let program: WebGLProgram = this.createProgram(gl, vertexShader, fragmentShader);
@@ -97,18 +97,10 @@ class Example002_Texture {
     }
 
     public createShaderFromSource(gl: WebGLRenderingContext, type: GLenum, source: string): WebGLShader {
-        let shader: WebGLShader = gl.createShader(type);
-        gl.shaderSource(shader, source);
-        gl.compileShader(shader);
-
-        let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-        if (success) {
-            return shader;
+        let shader = MainLoop.createShader(gl, type, source);
+        if (shader) {
+            return shader.glShader;
         }
-
-        console.warn(gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-
         return undefined;
     }
 
